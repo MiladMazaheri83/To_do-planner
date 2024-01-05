@@ -6,6 +6,7 @@
 #include <string.h>
 #include <sys/stat.h>
 #include <windows.h>
+
 int remove_directory(const char *path)
 {
     WIN32_FIND_DATA findFileData;
@@ -63,27 +64,44 @@ int remove_directory(const char *path)
 int sign_up();
 int log_in();
 int making_boards_and_lists();
-int view(int *s);
+int view(int *s, char buffer[100]);
 void free2DArray(char **arr, int rows);
 int Delete();
 int get_back();
 
 int main()
 {
-    system("color 70");
+    // system("color 70");
     char x;
+    char buffer[100];
     printf("are you already have an account?\nif yes press 1, and if no\npress 2 and make an account :) ");
     while (1)
     {
         x = getch();
         if (x == 50)
         {
-            sign_up();
+            while (1)
+            {
+                if (sign_up() == 0)
+                {
+                    break;
+                }
+                system("cls");
+                printf("This acount exist! please try another name...\n");
+            }
             break;
         }
         if (x == 49)
         {
-            log_in();
+            while (1)
+            {
+                if (log_in() == 0)
+                {
+                    break;
+                }
+                system("cls");
+                printf("there is no such an account");
+            }
             break;
         }
         printf("\nyou entered wrong key, please try again ~>");
@@ -91,14 +109,16 @@ int main()
 
     while (1)
     {
-        printf("1. view Boards\n2. Create New Boards\n3. Delete Board");
+        printf("1. view Boards\n2. Create New Boards\n3. Delete Board\n");
         int c = getch();
         int s;
         system("cls");
         switch (c)
         {
         case '1':
-            view(&s);
+        {
+            printf ("Available Boards: \n");
+            view(&s, buffer);
             system("cls");
             if (s == 1)
             {
@@ -112,12 +132,16 @@ int main()
             int z;
             while (1)
             {
-                printf("1. View List\n2. Create New list\n3. Delete List\n4. Go Back");
+                printf("Board: <%s> \n", buffer);
+                printf("1. View List\n2. Create New list\n3. Delete List\n4. Go Back\n");
                 int x = getch();
+                system("cls");
                 switch (x)
                 {
                 case '1':
-                    view(&s);
+                {
+                    printf(" Lists in <%s> Board:", buffer);
+                    view(&s, buffer);
                     system("cls");
                     if (s == 1)
                     {
@@ -127,19 +151,29 @@ int main()
                         system("cls");
                         s = 0;
                     }
-                    break;
+                    continue;
+                }
                 case '2':
+                {
                     system("cls");
-                    printf("What's the name of the new List?");
+                    printf("Add New List to <%s>:\n", buffer);
+                    printf("What's the name of the new List? ");
                     making_boards_and_lists();
-                    break;
+                    continue;
+                }
                 case '3':
+                {
+                    printf("Delete list from <%s>:\n", buffer);
+                    printf("Which List Do you want to Delete?\n");
                     Delete();
-                    break;
+                    continue;
+                }
                 case '4':
+                {
                     z = 1;
                     system("cls");
                     get_back();
+                }
                 default:
                     break;
                 }
@@ -151,17 +185,22 @@ int main()
             }
             z = 0;
             break;
+        }
         case '2':
+        {
             printf("whats the name of the new Board?");
             making_boards_and_lists();
             break;
+        }
         case '3':
+        {
             Delete();
+        }
         default:
             break;
         }
+        system("cls");
     }
-    system("cls");
     return 0;
 }
 
@@ -171,15 +210,20 @@ int sign_up()
     char passkey[100];
     char filepath[200];
     printf("\nplease enter your username:\n");
-    scanf("%s", username);
+    fgets(username, 100, stdin);
+    int num = strlen(username);
+    if (username[num - 1] == '\n')
+    {
+        username[num - 1] = '\0';
+    }
+
     if (mkdir(username) == 0)
     {
         printf("hello <%s> now make sure you have a strong password :)\n", username);
     }
     else
     {
-        printf("Failed to create directory.\n");
-        perror("Error");
+        return -1;
     }
     if (chdir(username) != 0)
     {
@@ -187,8 +231,13 @@ int sign_up()
         return 1;
     }
 
-    printf("Please enter your password (Atleast 6 character):\n");
-    scanf("%s", passkey);
+    printf("Please enter your password :\n");
+    fgets(passkey, 100, stdin);
+    num = strlen(passkey);
+    if (passkey[num - 1] == '\n')
+    {
+        passkey[num - 1] = '\0';
+    }
 
     snprintf(filepath, sizeof(filepath), "password.csv");
 
@@ -216,11 +265,17 @@ int log_in()
     while (1)
     {
         printf("\nplease enter your username:\n");
-        scanf("%s", username);
+        fgets(username, 100, stdin);
+        int num = strlen(username);
+        if (username[num - 1] == '\n')
+        {
+            username[num - 1] = '\0';
+        }
 
         if (chdir(username) != 0)
         {
             printf("there is no such an account");
+            return 1;
         }
         else
         {
@@ -254,7 +309,12 @@ int log_in()
     while (1)
     {
         printf("%s Please enter your password:\n", username);
-        scanf("%s", passkey);
+        fgets(passkey, 100, stdin);
+        int num = strlen(passkey);
+        if (passkey[num - 1] == '\n')
+        {
+            passkey[num - 1] = '\0';
+        }
         system("cls");
 
         int u = strcmp(key, passkey);
@@ -288,7 +348,8 @@ int making_boards_and_lists()
     else
     {
         printf("already excist.\n");
-        perror("Error");
+        Sleep(1000);
+        return 0;
     }
     snprintf(filepath, sizeof(filepath), "name.csv");
     FILE *table = fopen(filepath, "ab");
@@ -301,7 +362,7 @@ int making_boards_and_lists()
     fclose(table);
 }
 
-int view(int *s)
+int view(int *s, char buffer[100])
 {
     char line[256];
     int length = 0;
@@ -319,6 +380,7 @@ int view(int *s)
     if (name == NULL)
     {
         printf("THERE IS NOTHING!");
+        // Sleep(10000);
         *s = 1;
         return 0;
     }
@@ -329,27 +391,20 @@ int view(int *s)
         while (s != NULL)
         {
             i++;
-            printf("\n%d. %s", i, s);
+            printf("\n%d. %s  ", i, s);
             s = strtok(NULL, ",");
             length++;
         }
     }
-    if (length == 0)
-    {
-        fclose(name);
-        if (DeleteFile(filepath))
-        {
-            printf("File deleted successfully.\n");
-        }
-        return 0;
-    }
+    printf("\n~> ");
+    fclose(name);
     char **list = malloc(sizeof(int) * length);
     for (int i = 0; i < length; i++)
     {
         list[i] = malloc(sizeof(char) * 100);
     }
     i = 0;
-    fseek(name, 0, SEEK_SET);
+    name = fopen(filepath, "rb");
     while (fgets(line, sizeof(line), name) != NULL)
     {
         char *s = strtok(line, ",");
@@ -361,7 +416,20 @@ int view(int *s)
         }
     }
     int n;
-    scanf("%d", &n);
+    while (1)
+    {
+        if (scanf("%d", &n) == 1 && n >= 1 && n <= i)
+        {
+            break;
+        }
+        else
+        {
+            printf("\nyour input is unfortunately wrong please enter again (:");
+            printf("\n~> ");
+            while (getchar() != '\n')
+                ;
+        }
+    }
 
     if (chdir(list[n - 1]) != 0)
     {
@@ -370,7 +438,9 @@ int view(int *s)
     else
     {
         printf("<%s> is now open\n", list[n - 1]);
+        strcpy(buffer, list[n - 1]);
     }
+    fclose(name);
     free2DArray(list, length);
     return 1;
 }
@@ -390,7 +460,6 @@ int Delete()
     int length = 0;
     int i = 0;
 
-    printf("Which list Do you want to Delete?\n");
     // Get the current working directory
     char currentDir[FILENAME_MAX];
     GetCurrentDirectory(FILENAME_MAX, currentDir);
@@ -414,11 +483,12 @@ int Delete()
         while (s != NULL)
         {
             i++;
-            printf("\n%d. %s", i, s);
+            printf("\n%d. %s  ", i, s);
             s = strtok(NULL, ",");
             length++;
         }
     }
+    printf("\n~> ");
     char **list = malloc(sizeof(int) * length);
     for (int i = 0; i < length; i++)
     {
@@ -438,10 +508,23 @@ int Delete()
     }
     fclose(name);
     int n;
-    scanf("%d", &n);
+    while (1)
+    {
+        if (scanf("%d", &n) == 1 && n >= 1 && n <= i)
+        {
+            break;
+        }
+        else
+        {
+            printf("\nyour input is unfortunately wrong please enter again (:");
+            printf("\n~> ");
+            while (getchar() != '\n')
+                ;
+        }
+    }
     if (remove_directory(list[n - 1]) == 0)
     {
-        printf("%s is sucsessfully Deleted!", list[n - 1]);
+        printf("\n%s is sucsessfully Deleted!", list[n - 1]);
         Sleep(3000);
         system("cls");
     }
@@ -456,10 +539,16 @@ int Delete()
         }
     }
     fclose(name);
+    length--;
+    if (length == 0)
+    {
+        DeleteFile(filepath);
+    }
     free2DArray(list, length);
 }
 
-int get_back(){
+int get_back()
+{
     char currentDir[FILENAME_MAX];
     getcwd(currentDir, sizeof(currentDir));
     chdir("..");
