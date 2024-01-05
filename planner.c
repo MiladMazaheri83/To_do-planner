@@ -6,6 +6,18 @@
 #include <string.h>
 #include <sys/stat.h>
 #include <windows.h>
+#include <time.h>
+
+
+typedef struct Task
+{
+    char *taskname;
+    int n;
+    long day;
+    char *priority;
+    struct Task *next;
+
+} task;
 
 int remove_directory(const char *path)
 {
@@ -68,6 +80,8 @@ int view(int *s, char buffer[100]);
 void free2DArray(char **arr, int rows);
 int Delete();
 int get_back();
+int time_calculate(char* f_time);
+int new_task();
 
 int main()
 {
@@ -117,7 +131,7 @@ int main()
         {
         case '1':
         {
-            printf ("Available Boards: \n");
+            printf("Available Boards: \n");
             view(&s, buffer);
             system("cls");
             if (s == 1)
@@ -554,4 +568,52 @@ int get_back()
     chdir("..");
     getcwd(currentDir, sizeof(currentDir));
     return 0;
+}
+
+// int new_task()
+// {
+    
+//     pritnf("enter your task: ");
+//     fgets(, 100, stdin);
+
+//     pritnf("enter your task: ");
+//     pritnf("enter your task: ");
+// }
+
+int time_calculate(char* f_time)
+{
+    char *token = strtok(f_time, "-");
+    char* year = token;
+    token = strtok(NULL, "-");
+    char* mounth = token;
+    token = strtok(NULL, "-");
+    char* day = token;
+
+    // Define two time structures
+    struct tm time1 = {0}; // Initialize to all zeros
+    struct tm time2 = {0};
+
+    time_t current_time = time(NULL);
+    struct tm *time_info = localtime(&current_time);
+
+    // Set the values for the two times
+    time1.tm_year = atoi(year) - 1900; // Year - 1900
+    time1.tm_mon = atoi(mounth) - 1;            // Month (0-11)
+    time1.tm_mday = atoi(day);           // Day
+
+    time2.tm_year = time_info->tm_year;
+    time2.tm_mon = time_info->tm_mon;
+    time2.tm_mday = time_info->tm_mday;
+
+    // Convert time structures to time_t
+    time_t t1 = mktime(&time1);
+    time_t t2 = mktime(&time2);
+
+    // Calculate the time difference in seconds
+    double difference_seconds = difftime(t2, t1);
+
+    // Convert seconds to days
+    double difference_days = difference_seconds / (24 * 3600);
+
+    return difference_days;
 }
